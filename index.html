@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thread & Soul - Your Dress Business</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         /* Custom CSS for finer control and animations */
@@ -208,70 +208,10 @@
         let userId = localStorage.getItem('threadSoulUserId') || crypto.randomUUID(); // Generate unique ID if not exists
         localStorage.setItem('threadSoulUserId', userId); // Store for persistence across sessions
 
-        // Firebase Initialization with your specific config
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // This remains for consistency
-        const firebaseConfig = {
-          apiKey: "AIzaSyCm_IOPczGRuSBgFAjOwlTmHYPTZwJ8A_Y",
-          authDomain: "thread-soul-orders.firebaseapp.com",
-          projectId: "thread-soul-orders",
-          storageBucket: "thread-soul-orders.firebasestorage.app",
-          messagingSenderId: "190522325875",
-          appId: "1:190522325875:web:c34b07aa107419056ae306"
-        };
+        // --- Configuration for WhatsApp ---
+        // REPLACE THIS WITH THE ACTUAL PHONE NUMBER FOR YOUR BUSINESS (including country code, without + or leading zeros)
+        const WHATSAPP_BUSINESS_NUMBER = "919876543210"; // Example: for India +91, use 919876543210
 
-        let db, auth;
-        let isFirebaseReady = false; // Flag to indicate Firebase is ready
-
-        async function initializeFirebase() {
-            try {
-                // Dynamic imports for Firebase modules
-                const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
-                // IMPORTANT: Include onAuthStateChanged for robust auth handling
-                const { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
-                const { getFirestore, doc, setDoc, collection, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                // Use onAuthStateChanged for proper initial authentication handling
-                // This ensures we only attempt anonymous sign-in if no user is already logged in,
-                // and avoids issues with __initial_auth_token outside Canvas.
-                onAuthStateChanged(auth, async (user) => {
-                    if (!user) { // If no user is currently authenticated
-                        try {
-                            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                            // Only attempt signInWithCustomToken if a non-empty custom token is actually provided
-                            if (initialAuthToken && initialAuthToken.length > 0) {
-                                console.log("Attempting sign in with custom token...");
-                                await signInWithCustomToken(auth, initialAuthToken);
-                                console.log("Firebase signed in with custom token.");
-                            } else {
-                                console.log("No custom token provided or invalid. Attempting anonymous sign in...");
-                                await signInAnonymously(auth);
-                                console.log("Firebase signed in anonymously.");
-                            }
-                        } catch (authError) {
-                            console.error("Firebase Authentication (Anonymous/Custom Token) Failed:", authError);
-                            // Only show message box for errors that prevent authentication, not just custom-token-mismatch which is expected outside Canvas
-                            if (authError.code !== 'auth/custom-token-mismatch') {
-                                showMessageBox("Error: Authentication failed. Orders might not be saved. Check console for details.", "error");
-                            }
-                        }
-                    } else {
-                        console.log("Firebase user already authenticated:", user.uid);
-                    }
-                    isFirebaseReady = true; // Set flag after auth state is determined
-                });
-
-                console.log("Firebase initialization process started (app and services defined)."); // Diagnostic Log: Firebase app defined
-
-            } catch (error) {
-                console.error("Critical Error: Firebase App could not be initialized. Check console for details.", error);
-                showMessageBox("Critical Error: Firebase App could not be initialized. Check console for details.", "error");
-            }
-        }
-        initializeFirebase(); // Call to initialize Firebase on page load
 
         // --- Utility Functions ---
         window.updateCartCount = function() { // Made global
@@ -355,46 +295,6 @@
             updateCartCount();
             renderCartModalContent(); // Re-render cart content
             showMessageBox("Cart cleared!", 'info');
-        }
-
-        async function placeOrder(orderDetails) {
-            // Ensure Firebase is ready and user is authenticated before attempting to place order
-            if (!isFirebaseReady || !auth.currentUser) {
-                showMessageBox("Error: Database not ready or user not authenticated. Cannot place order. Please try again in a moment.", "error");
-                console.error("Cannot place order: Firebase not ready or user not authenticated.");
-                return { success: false, message: "Authentication required to place order." };
-            }
-
-            try {
-                const orderData = {
-                    customerInfo: orderDetails.customerInfo,
-                    items: cart.map(item => ({
-                        id: item.id,
-                        name: item.name,
-                        price: item.price,
-                        quantity: item.quantity,
-                        imageUrl: item.imageUrl
-                    })),
-                    totalAmount: cart.reduce((total, item) => total + item.price * item.quantity, 0),
-                    status: 'Pending',
-                    timestamp: serverTimestamp(), // Corrected usage: directly use serverTimestamp()
-                    userId: auth.currentUser.uid, // Associate order with the authenticated user
-                    appId: appId // Associate order with the current app instance
-                };
-
-                // Store order in Firestore under public data path
-                const ordersCollectionRef = collection(db, `artifacts/${appId}/public/data/orders`);
-                // Use doc() with no argument to automatically generate a document ID, then setDoc()
-                await setDoc(doc(ordersCollectionRef), orderData);
-
-                console.log("Order placed successfully:", orderData);
-                clearCart(); // Clear cart after successful order
-                return { success: true, message: "Order placed successfully! We will contact you soon." };
-            } catch (error) {
-                console.error("Error placing order:", error);
-                showMessageBox("Failed to place order. Please try again.", "error");
-                return { success: false, message: "Failed to place order. Please try again." };
-            }
         }
 
         // --- Page Rendering Functions ---
@@ -495,7 +395,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         ${selectedCollection.products.map(product => `
                             <div class="product-card bg-white rounded-xl shadow-lg p-4 flex flex-col items-center text-center transform hover:scale-105 transition-transform duration-300">
-                                <img src="${product.imageUrl}" alt="${product.name}" class="w-48 h-48 object-cover rounded-lg mb-4 shadow-md"
+                                <img src="${product.imageUrl}" alt="${product.name}" class="w-48 h-48 object-cover rounded-lg mb-4 shadow-sm"
                                      onerror="this.onerror=null;this.src='https://placehold.co/200x200/cccccc/333333?text=Product';">
                                 <h3 class="text-lg font-semibold text-gray-800 mb-2">${product.name}</h3>
                                 <p class="text-purple-700 font-bold text-xl mb-4 flex items-center">
@@ -607,6 +507,7 @@
         let cartModalInstance = null;
 
         window.openCartModal = function() { // Made global
+            console.log("openCartModal called."); // Diagnostic
             if (cartModalInstance) {
                 closeCartModal(); // Ensure only one modal is open
             }
@@ -701,7 +602,7 @@
                             Clear Cart
                         </button>
                         <button onclick="renderCheckoutForm()" class="px-6 py-3 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors shadow-lg flex-grow">
-                            Proceed to Checkout
+                            Proceed to Order
                         </button>
                     </div>
                 `;
@@ -709,13 +610,11 @@
         }
 
         window.renderCheckoutForm = function() { // Made global
-            console.log("renderCheckoutForm called, preparing checkout form."); // Diagnostic Log 1
-
             const cartContentDiv = document.getElementById('cart-content');
             const checkoutFormContainer = document.getElementById('checkout-form-container');
 
             if (!cartContentDiv || !checkoutFormContainer) {
-                console.error("Cart content or checkout form container not found for rendering."); // Diagnostic Log 2
+                console.error("Cart content or checkout form container not found for rendering.");
                 return;
             }
 
@@ -724,11 +623,12 @@
 
             const checkoutFormHtml = `
                 <div class="p-4">
-                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Checkout</h3>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Your Order Details</h3>
                     <p class="text-sm text-gray-500 mb-4 text-center">
-                        Your User ID for this session: <span class="font-mono bg-gray-100 p-1 rounded text-xs">${userId}</span>
+                        Your Order ID: <span class="font-mono bg-gray-100 p-1 rounded text-xs">${userId}</span>
                     </p>
-                    <form id="checkout-form" class="space-y-4" novalidate> <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <form id="checkout-form" class="space-y-4" novalidate>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="name" class="block text-gray-700 text-sm font-bold mb-1">Full Name</label>
                                 <input type="text" id="name" name="name" required
@@ -752,71 +652,37 @@
                             </div>
                         </div>
 
-                        <h4 class="text-xl font-bold text-gray-800 mt-6 mb-4">Payment Details (Simulated)</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="cardNumber" class="block text-gray-700 text-sm font-bold mb-1">Card Number</label>
-                                <input type="text" id="cardNumber" name="cardNumber" placeholder="XXXX XXXX XXXX XXXX" maxlength="16" required
-                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500">
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="expiryDate" class="block text-gray-700 text-sm font-bold mb-1">Expiry Date</label>
-                                    <input type="text" id="expiryDate" name="expiryDate" placeholder="MM/YY" maxlength="5" required
-                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500">
-                                </div>
-                                <div>
-                                    <label for="cvv" class="block text-gray-700 text-sm font-bold mb-1">CVV</label>
-                                    <input type="text" id="cvv" name="cvv" placeholder="XXX" maxlength="3" required
-                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500">
-                                </div>
-                            </div>
-                        </div>
-
                         <p id="order-status" class="text-center font-semibold mt-4"></p>
 
-                        <button type="submit" id="pay-button"
-                            class="w-full py-3 bg-pink-600 text-white rounded-full hover:bg-pink-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-lg font-semibold flex items-center justify-center">
-                            Pay <i data-lucide="indian-rupee" class="w-5 h-5 ml-2 mr-1"></i>${total.toLocaleString('en-IN')}
+                        <button type="button" id="whatsapp-order-button" onclick="handleWhatsAppOrder(event)"
+                            class="w-full py-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-lg font-semibold flex items-center justify-center">
+                            <i data-lucide="whatsapp" class="w-6 h-6 mr-2"></i> WhatsApp Order (Total: <i data-lucide="indian-rupee" class="w-5 h-5 ml-2 mr-1"></i>${total.toLocaleString('en-IN')})
                         </button>
                         <p class="text-sm text-center text-gray-500 mt-2">
-                            This payment is simulated for demonstration purposes.
+                            Clicking this will open WhatsApp with your order details.
                         </p>
                     </form>
                 </div>
             `;
-            console.log("Checkout form HTML being injected."); // Diagnostic Log 9 (simplified)
-
             checkoutFormContainer.innerHTML = checkoutFormHtml;
             lucide.createIcons();
-
-            // *** IMPORTANT: Explicitly attach event listener after HTML is in DOM ***
-            const checkoutForm = document.getElementById('checkout-form');
-            if (checkoutForm) {
-                checkoutForm.addEventListener('submit', window.handleCheckoutFormSubmit);
-                console.log("Submit event listener attached to checkout form."); // New diagnostic log
-            } else {
-                console.error("Error: Could not find checkout form after injection to attach listener.");
-            }
         }
 
-        // New global function to handle form submission
-        window.handleCheckoutFormSubmit = async function(e) {
-            console.log("handleCheckoutFormSubmit function entered."); // Diagnostic Log 8
-            e.preventDefault(); // Prevent default form submission (page reload)
-            console.log("Form submit event triggered (via addEventListener)."); // Diagnostic Log 4 (updated)
+        window.handleWhatsAppOrder = async function(e) {
+            if (e && e.preventDefault) {
+                e.preventDefault();
+            }
 
-            const payButton = document.getElementById('pay-button');
+            const whatsappButton = document.getElementById('whatsapp-order-button');
             const orderStatusElement = document.getElementById('order-status');
-            console.log("Pay button element (inside submit handler):", payButton); // Diagnostic Log 5
 
-            if (!payButton || !orderStatusElement) {
-                console.error("Pay button or order status element not found in submit handler."); // Diagnostic Log 6
+            if (!whatsappButton || !orderStatusElement) {
+                console.error("WhatsApp button or order status element not found.");
                 return;
             }
 
-            payButton.disabled = true;
-            payButton.innerHTML = `<span class="loading-spinner mr-3"></span> Processing...`;
+            whatsappButton.disabled = true;
+            whatsappButton.innerHTML = `<span class="loading-spinner mr-3"></span> Preparing WhatsApp message...`;
             orderStatusElement.textContent = '';
 
             const customerInfo = {
@@ -824,36 +690,55 @@
                 email: document.getElementById('email').value,
                 phone: document.getElementById('phone').value,
                 address: document.getElementById('address').value,
-                cardNumber: document.getElementById('cardNumber').value,
-                expiryDate: document.getElementById('expiryDate').value,
-                cvv: document.getElementById('cvv').value,
             };
 
-            // Simulate payment processing
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            const result = await placeOrder({ customerInfo, cart });
-
-            orderStatusElement.textContent = result.message;
-            orderStatusElement.className = `text-center font-semibold mt-4 ${result.success ? 'text-green-600' : 'text-red-600'}`;
-
-            if (result.success) {
-                console.log("--- New Order Notification for Business Owner ---");
-                console.log("Order ID: (Generated by Firebase)");
-                console.log("Customer Name:", customerInfo.name);
-                console.log("Customer Email:", customerInfo.email);
-                console.log("Customer Phone:", customerInfo.phone);
-                console.log("Delivery Address:", customerInfo.address);
-                console.log("Items Ordered:", cart.map(item => `${item.name} (Qty: ${item.quantity})`).join(', '));
-                console.log("Total Amount:", total.toLocaleString('en-IN'), "INR");
-                console.log("-----------------------------------------------");
-
-                setTimeout(() => {
-                    closeCartModal();
-                }, 2000);
+            // Basic client-side validation
+            if (!customerInfo.name || !customerInfo.email || !customerInfo.phone || !customerInfo.address) {
+                orderStatusElement.textContent = 'Please fill in all required fields.';
+                orderStatusElement.className = 'text-center font-semibold mt-4 text-red-600';
+                whatsappButton.disabled = false;
+                const currentTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+                whatsappButton.innerHTML = `<i data-lucide="whatsapp" class="w-6 h-6 mr-2"></i> WhatsApp Order (Total: <i data-lucide="indian-rupee" class="w-5 h-5 ml-2 mr-1"></i>${currentTotal.toLocaleString('en-IN')})`;
+                lucide.createIcons();
+                return;
             }
-            payButton.disabled = false;
-            payButton.innerHTML = `Pay <i data-lucide="indian-rupee" class="w-5 h-5 ml-2 mr-1"></i>${total.toLocaleString('en-IN')}`;
+
+            // Construct the WhatsApp message
+            let message = `*New Order from Thread & Soul Website*%0A%0A`;
+            message += `*Order ID:* ${userId}%0A`;
+            message += `*Customer Details:*%0A`;
+            message += `Name: ${customerInfo.name}%0A`;
+            message += `Email: ${customerInfo.email}%0A`;
+            message += `Phone: ${customerInfo.phone}%0A`;
+            message += `Address: ${customerInfo.address}%0A%0A`;
+            message += `*Ordered Items:*%0A`;
+
+            cart.forEach((item, index) => {
+                message += `${index + 1}. ${item.name} (Qty: ${item.quantity}) - ₹${item.price.toLocaleString('en-IN')}%0A`;
+            });
+
+            const totalAmount = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+            message += `%0A*Total Amount: ₹${totalAmount.toLocaleString('en-IN')}*%0A%0A`;
+            message += `Please contact the customer to confirm the order and arrange payment.`;
+
+            const whatsappUrl = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${encodeURIComponent(message)}`;
+
+            // Open WhatsApp
+            window.open(whatsappUrl, '_blank');
+
+            orderStatusElement.textContent = 'WhatsApp opened with your order details. Please send the message.';
+            orderStatusElement.className = 'text-center font-semibold mt-4 text-green-600';
+
+            // Clear cart after opening WhatsApp (assuming order is "sent" from user's perspective)
+            clearCart();
+            setTimeout(() => {
+                closeCartModal();
+            }, 3000); // Close modal after a few seconds
+
+            whatsappButton.disabled = false;
+            // Update button text to reflect new (empty) cart total
+            const newTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0); // Should be 0 after clearCart
+            whatsappButton.innerHTML = `<i data-lucide="whatsapp" class="w-6 h-6 mr-2"></i> WhatsApp Order (Total: <i data-lucide="indian-rupee" class="w-5 h-5 ml-2 mr-1"></i>${newTotal.toLocaleString('en-IN')})`;
             lucide.createIcons();
         };
 
