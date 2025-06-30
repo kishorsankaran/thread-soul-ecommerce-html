@@ -407,6 +407,7 @@
                                 <img src="${product.imageUrl}" alt="${product.name}" class="w-48 h-48 object-cover rounded-lg mb-4 shadow-sm"
                                      onerror="this.onerror=null;this.src='https://placehold.co/200x200/cccccc/333333?text=Product';">
                                 <h3 class="text-lg font-semibold text-gray-800 mb-2">${product.name}</h3>
+                                <p class="text-sm text-gray-600 mb-2">Code: ${product.id}</p> <!-- Added product code here -->
                                 <p class="text-purple-700 font-bold text-xl mb-4 flex items-center">
                                     <i data-lucide="indian-rupee" class="w-4 h-4 mr-1"></i>${product.price.toLocaleString('en-IN')}
                                 </p>
