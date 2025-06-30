@@ -100,9 +100,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .currency-symbol {
-            font-family: 'IndianRupeeSign', 'Arial Unicode MS', sans-serif; /* Fallback fonts */
-        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans flex flex-col">
@@ -220,9 +217,9 @@
         let userId = localStorage.getItem('threadSoulUserId') || crypto.randomUUID(); // Generate unique ID if not exists
         localStorage.setItem('threadSoulUserId', userId); // Store for persistence across sessions
 
-        // Firebase Initialization (Minimal for saving orders)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = { // <--- THIS IS YOUR NEW, ACTUAL CONFIG
+        // Firebase Initialization with your specific config
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // This remains for consistency
+        const firebaseConfig = {
           apiKey: "AIzaSyCm_IOPczGRuSBgFAjOwlTmHYPTZwJ8A_Y",
           authDomain: "thread-soul-orders.firebaseapp.com",
           projectId: "thread-soul-orders",
@@ -230,14 +227,14 @@
           messagingSenderId: "190522325875",
           appId: "1:190522325875:web:c34b07aa107419056ae306"
         };
-const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; // This remains for consistency
 
         let db, auth;
         let isFirebaseReady = false; // Flag to indicate Firebase is ready
 
         async function initializeFirebase() {
             try {
-                // Import Firebase modules dynamically
+                // Dynamic imports for Firebase modules
                 const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
                 const { getAuth, signInAnonymously, signInWithCustomToken } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
                 const { getFirestore, doc, setDoc, collection, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
@@ -246,6 +243,7 @@ const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial
                 db = getFirestore(app);
                 auth = getAuth(app);
 
+                // Authenticate user with custom token or anonymously if not available
                 if (initialAuthToken) {
                     await signInWithCustomToken(auth, initialAuthToken);
                 } else {
@@ -256,15 +254,22 @@ const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial
 
             } catch (error) {
                 console.error("Failed to initialize Firebase:", error);
-                showMessageBox("Error: Could not connect to the database. Orders might not be saved.", "error");
+                showMessageBox("Error: Could not connect to the database. Orders might not be saved. Check console for details.", "error");
             }
         }
-        initializeFirebase();
+        initializeFirebase(); // Call to initialize Firebase on page load
 
         // --- Utility Functions ---
         function updateCartCount() {
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
             document.getElementById('cart-item-count').textContent = totalItems;
+            // Hide the cart count if 0 items, show otherwise
+            const cartCountElement = document.getElementById('cart-item-count');
+            if (totalItems === 0) {
+                cartCountElement.classList.add('hidden');
+            } else {
+                cartCountElement.classList.remove('hidden');
+            }
         }
 
         function saveCartToLocalStorage() {
@@ -339,8 +344,10 @@ const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial
         }
 
         async function placeOrder(orderDetails) {
+            // Ensure Firebase is ready and user is authenticated before attempting to place order
             if (!isFirebaseReady || !auth.currentUser) {
-                showMessageBox("Error: Database not ready or user not authenticated. Cannot place order.", "error");
+                showMessageBox("Error: Database not ready or user not authenticated. Cannot place order. Please try again in a moment.", "error");
+                console.error("Cannot place order: Firebase not ready or user not authenticated.");
                 return { success: false, message: "Authentication required to place order." };
             }
 
@@ -356,14 +363,15 @@ const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial
                     })),
                     totalAmount: cart.reduce((total, item) => total + item.price * item.quantity, 0),
                     status: 'Pending',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), // Use server timestamp
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), // Use Firestore server timestamp
                     userId: auth.currentUser.uid, // Associate order with the authenticated user
                     appId: appId // Associate order with the current app instance
                 };
 
                 // Store order in Firestore under public data path
                 const ordersCollectionRef = collection(db, `artifacts/${appId}/public/data/orders`);
-                await setDoc(doc(ordersCollectionRef), orderData); // Automatically generates a doc ID
+                // Use addDoc to automatically generate a document ID
+                await setDoc(doc(ordersCollectionRef), orderData);
 
                 console.log("Order placed successfully:", orderData);
                 clearCart(); // Clear cart after successful order
@@ -549,7 +557,7 @@ const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial
 
         function navigateTo(page) {
             currentPage = page;
-            selectedCollection = null; // Reset selected collection
+            selectedCollection = null; // Reset selected collection when changing main pages
             renderCurrentPage();
         }
 
