@@ -363,14 +363,14 @@
                     })),
                     totalAmount: cart.reduce((total, item) => total + item.price * item.quantity, 0),
                     status: 'Pending',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), // Use Firestore server timestamp
+                    timestamp: serverTimestamp(), // Corrected usage: directly use serverTimestamp()
                     userId: auth.currentUser.uid, // Associate order with the authenticated user
                     appId: appId // Associate order with the current app instance
                 };
 
                 // Store order in Firestore under public data path
                 const ordersCollectionRef = collection(db, `artifacts/${appId}/public/data/orders`);
-                // Use addDoc to automatically generate a document ID
+                // Use doc() with no argument to automatically generate a document ID, then setDoc()
                 await setDoc(doc(ordersCollectionRef), orderData);
 
                 console.log("Order placed successfully:", orderData);
@@ -695,10 +695,15 @@
         }
 
         window.renderCheckoutForm = function() { // Made global
+            console.log("renderCheckoutForm called, preparing checkout form."); // Diagnostic Log 1
+
             const cartContentDiv = document.getElementById('cart-content');
             const checkoutFormContainer = document.getElementById('checkout-form-container');
 
-            if (!cartContentDiv || !checkoutFormContainer) return;
+            if (!cartContentDiv || !checkoutFormContainer) {
+                console.error("Cart content or checkout form container not found for rendering."); // Diagnostic Log 2
+                return;
+            }
 
             cartContentDiv.innerHTML = ''; // Clear cart view
             const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -769,53 +774,67 @@
             `;
             lucide.createIcons();
 
-            document.getElementById('checkout-form').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const payButton = document.getElementById('pay-button');
-                const orderStatusElement = document.getElementById('order-status');
-                payButton.disabled = true;
-                payButton.innerHTML = `<span class="loading-spinner mr-3"></span> Processing...`;
-                orderStatusElement.textContent = '';
+            const checkoutForm = document.getElementById('checkout-form'); // Get reference to the form
+            console.log("Checkout form element obtained:", checkoutForm); // Diagnostic Log 3
 
-                const customerInfo = {
-                    name: document.getElementById('name').value,
-                    email: document.getElementById('email').value,
-                    phone: document.getElementById('phone').value,
-                    address: document.getElementById('address').value,
-                    cardNumber: document.getElementById('cardNumber').value,
-                    expiryDate: document.getElementById('expiryDate').value,
-                    cvv: document.getElementById('cvv').value,
-                };
+            if (checkoutForm) { // Ensure form exists before adding listener
+                checkoutForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    console.log("Form submit event triggered."); // Diagnostic Log 4
 
-                // Simulate payment processing
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                    const payButton = document.getElementById('pay-button');
+                    const orderStatusElement = document.getElementById('order-status');
+                    console.log("Pay button element (inside submit handler):", payButton); // Diagnostic Log 5
 
-                const result = await placeOrder({ customerInfo, cart });
+                    if (!payButton || !orderStatusElement) {
+                        console.error("Pay button or order status element not found in submit handler."); // Diagnostic Log 6
+                        return;
+                    }
 
-                orderStatusElement.textContent = result.message;
-                orderStatusElement.className = `text-center font-semibold mt-4 ${result.success ? 'text-green-600' : 'text-red-600'}`;
+                    payButton.disabled = true;
+                    payButton.innerHTML = `<span class="loading-spinner mr-3"></span> Processing...`;
+                    orderStatusElement.textContent = '';
 
-                if (result.success) {
-                    // In a real application, this is where you'd send a notification
-                    // to the business owner (e.g., via email, SMS, or a backend dashboard).
-                    console.log("--- New Order Notification for Business Owner ---");
-                    console.log("Order ID: (Generated by Firebase)");
-                    console.log("Customer Name:", customerInfo.name);
-                    console.log("Customer Email:", customerInfo.email);
-                    console.log("Customer Phone:", customerInfo.phone);
-                    console.log("Delivery Address:", customerInfo.address);
-                    console.log("Items Ordered:", cart.map(item => `${item.name} (Qty: ${item.quantity})`).join(', '));
-                    console.log("Total Amount:", total.toLocaleString('en-IN'), "INR");
-                    console.log("-----------------------------------------------");
+                    const customerInfo = {
+                        name: document.getElementById('name').value,
+                        email: document.getElementById('email').value,
+                        phone: document.getElementById('phone').value,
+                        address: document.getElementById('address').value,
+                        cardNumber: document.getElementById('cardNumber').value,
+                        expiryDate: document.getElementById('expiryDate').value,
+                        cvv: document.getElementById('cvv').value,
+                    };
 
-                    setTimeout(() => {
-                        closeCartModal(); // Close cart modal after a short delay on success
-                    }, 2000);
-                }
-                payButton.disabled = false;
-                payButton.innerHTML = `Pay <i data-lucide="indian-rupee" class="w-5 h-5 ml-2 mr-1"></i>${total.toLocaleString('en-IN')}`;
-                lucide.createIcons(); // Render lucide icon again for button text
-            });
+                    // Simulate payment processing
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+
+                    const result = await placeOrder({ customerInfo, cart });
+
+                    orderStatusElement.textContent = result.message;
+                    orderStatusElement.className = `text-center font-semibold mt-4 ${result.success ? 'text-green-600' : 'text-red-600'}`;
+
+                    if (result.success) {
+                        console.log("--- New Order Notification for Business Owner ---");
+                        console.log("Order ID: (Generated by Firebase)");
+                        console.log("Customer Name:", customerInfo.name);
+                        console.log("Customer Email:", customerInfo.email);
+                        console.log("Customer Phone:", customerInfo.phone);
+                        console.log("Delivery Address:", customerInfo.address);
+                        console.log("Items Ordered:", cart.map(item => `${item.name} (Qty: ${item.quantity})`).join(', '));
+                        console.log("Total Amount:", total.toLocaleString('en-IN'), "INR");
+                        console.log("-----------------------------------------------");
+
+                        setTimeout(() => {
+                            closeCartModal();
+                        }, 2000);
+                    }
+                    payButton.disabled = false;
+                    payButton.innerHTML = `Pay <i data-lucide="indian-rupee" class="w-5 h-5 ml-2 mr-1"></i>${total.toLocaleString('en-IN')}`;
+                    lucide.createIcons();
+                });
+            } else {
+                console.error("Checkout form element was not found for event listener attachment."); // Diagnostic Log 7
+            }
         }
 
 
