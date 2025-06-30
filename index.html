@@ -731,11 +731,11 @@
             message += `Please contact the customer to confirm the order and arrange payment.`;
 
             // --- DIAGNOSTIC LOGS ADDED HERE ---
-            console.log("Constructed WhatsApp Message:");
-            console.log(message);
-            const whatsappUrl = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${encodeURIComponent(message)}`;
-            console.log("Generated WhatsApp URL:");
-            console.log(whatsappUrl);
+            console.log("Constructed WhatsApp Message (Raw):", message);
+            const encodedMessage = encodeURIComponent(message);
+            console.log("Constructed WhatsApp Message (Encoded):", encodedMessage);
+            const whatsappUrl = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${encodedMessage}`;
+            console.log("Generated WhatsApp URL:", whatsappUrl);
             // --- END DIAGNOSTIC LOGS ---
 
             // Open WhatsApp
