@@ -713,21 +713,22 @@
             }
 
             // Construct the WhatsApp message
-            let message = `*New Order for Thread & Soul Website*%0A%0A`; // Changed header
-            message += `*Ordered Items:*%0A`;
+            let message = `*New Order for Thread & Soul Website*\n\n`; // Changed header, using \n
+            message += `*--- Ordered Items ---*\n`; // New section header
 
-            cart.forEach((item) => { // Removed index to simplify, added item.id
-                message += `Code: ${item.id}, Product: ${item.name}, Qty: ${item.quantity}%0A`;
+            cart.forEach((item) => {
+                // Simplified item line to include Code, Product Name, Quantity
+                message += `Code: ${item.id}, Product: ${item.name}, Qty: ${item.quantity}\n`;
             });
 
             const totalAmount = cart.reduce((total, item) => total + item.price * item.quantity, 0);
-            message += `%0A*Total Amount: ₹${totalAmount.toLocaleString('en-IN')}*%0A%0A`; // Kept asterisk for total for emphasis
+            message += `\n*Total Amount: ₹${totalAmount.toLocaleString('en-IN')}*\n\n`; // Kept asterisk for total for emphasis
 
-            message += `*Customer Details:*%0A`; // Re-added customer details header for clarity
-            message += `Name: ${customerInfo.name}%0A`;
-            message += `Phone: ${customerInfo.phone}%0A`;
-            message += `Email: ${customerInfo.email}%0A`;
-            message += `Address: ${customerInfo.address}%0A`;
+            message += `*--- Customer Details ---*\n`; // New section header
+            message += `Name: ${customerInfo.name}\n`;
+            message += `Phone: ${customerInfo.phone}\n`;
+            message += `Email: ${customerInfo.email}\n`;
+            message += `Address: ${customerInfo.address}\n`;
 
             // --- DIAGNOSTIC LOGS ---
             console.log("Constructed WhatsApp Message (Raw):", message);
