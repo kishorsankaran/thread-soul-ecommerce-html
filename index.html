@@ -222,8 +222,15 @@
 
         // Firebase Initialization (Minimal for saving orders)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const firebaseConfig = { // <--- THIS IS YOUR NEW, ACTUAL CONFIG
+          apiKey: "AIzaSyCm_IOPczGRuSBgFAjOwlTmHYPTZwJ8A_Y",
+          authDomain: "thread-soul-orders.firebaseapp.com",
+          projectId: "thread-soul-orders",
+          storageBucket: "thread-soul-orders.firebasestorage.app",
+          messagingSenderId: "190522325875",
+          appId: "1:190522325875:web:c34b07aa107419056ae306"
+        };
+const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         let db, auth;
         let isFirebaseReady = false; // Flag to indicate Firebase is ready
