@@ -227,7 +227,6 @@
           messagingSenderId: "190522325875",
           appId: "1:190522325875:web:c34b07aa107419056ae306"
         };
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; // This remains for consistency
 
         let db, auth;
         let isFirebaseReady = false; // Flag to indicate Firebase is ready
@@ -236,25 +235,49 @@
             try {
                 // Dynamic imports for Firebase modules
                 const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
-                const { getAuth, signInAnonymously, signInWithCustomToken } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+                // IMPORTANT: Include onAuthStateChanged for robust auth handling
+                const { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
                 const { getFirestore, doc, setDoc, collection, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
 
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
 
-                // Authenticate user with custom token or anonymously if not available
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                isFirebaseReady = true;
-                console.log("Firebase initialized and authenticated.");
+                // Use onAuthStateChanged for proper initial authentication handling
+                // This ensures we only attempt anonymous sign-in if no user is already logged in,
+                // and avoids issues with __initial_auth_token outside Canvas.
+                onAuthStateChanged(auth, async (user) => {
+                    if (!user) { // If no user is currently authenticated
+                        try {
+                            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                            // Only attempt signInWithCustomToken if a non-empty custom token is actually provided
+                            if (initialAuthToken && initialAuthToken.length > 0) {
+                                console.log("Attempting sign in with custom token...");
+                                await signInWithCustomToken(auth, initialAuthToken);
+                                console.log("Firebase signed in with custom token.");
+                            } else {
+                                console.log("No custom token provided or invalid. Attempting anonymous sign in...");
+                                await signInAnonymously(auth);
+                                console.log("Firebase signed in anonymously.");
+                            }
+                        } catch (authError) {
+                            console.error("Firebase Authentication (Anonymous/Custom Token) Failed:", authError);
+                            // Only show message box for errors that prevent authentication, not just custom-token-mismatch which is expected outside Canvas
+                            if (authError.code !== 'auth/custom-token-mismatch') {
+                                showMessageBox("Error: Authentication failed. Orders might not be saved. Check console for details.", "error");
+                            }
+                        }
+                    } else {
+                        console.log("Firebase user already authenticated:", user.uid);
+                    }
+                    isFirebaseReady = true; // Set flag after auth state is determined
+                });
+
+                console.log("Firebase initialization process started (app and services defined)."); // Diagnostic Log: Firebase app defined
 
             } catch (error) {
-                console.error("Failed to initialize Firebase:", error);
-                showMessageBox("Error: Could not connect to the database. Orders might not be saved. Check console for details.", "error");
+                console.error("Critical Error: Firebase App could not be initialized. Check console for details.", error);
+                showMessageBox("Critical Error: Firebase App could not be initialized. Check console for details.", "error");
             }
         }
         initializeFirebase(); // Call to initialize Firebase on page load
@@ -708,7 +731,8 @@
             cartContentDiv.innerHTML = ''; // Clear cart view
             const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-            checkoutFormContainer.innerHTML = `
+            // Diagnostic Log: Log the HTML string that will be injected
+            const checkoutFormHtml = `
                 <div class="p-4">
                     <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Checkout</h3>
                     <p class="text-sm text-gray-500 mb-4 text-center">
@@ -762,7 +786,7 @@
 
                         <p id="order-status" class="text-center font-semibold mt-4"></p>
 
-                        <button type="submit" id="pay-button"
+                        <button type="submit" id="pay-button" onclick="console.log('Pay button clicked via onclick!'); return true;"
                             class="w-full py-3 bg-pink-600 text-white rounded-full hover:bg-pink-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-lg font-semibold flex items-center justify-center">
                             Pay <i data-lucide="indian-rupee" class="w-5 h-5 ml-2 mr-1"></i>${total.toLocaleString('en-IN')}
                         </button>
@@ -772,6 +796,9 @@
                     </form>
                 </div>
             `;
+            console.log("Checkout form HTML being injected:", checkoutFormHtml); // Diagnostic Log 9
+
+            checkoutFormContainer.innerHTML = checkoutFormHtml;
             lucide.createIcons();
         }
 
