@@ -714,7 +714,7 @@
                     <p class="text-sm text-gray-500 mb-4 text-center">
                         Your User ID for this session: <span class="font-mono bg-gray-100 p-1 rounded text-xs">${userId}</span>
                     </p>
-                    <form id="checkout-form" class="space-y-4" onsubmit="handleCheckoutFormSubmit(event)"> <!-- Added onsubmit handler -->
+                    <form id="checkout-form" class="space-y-4" onsubmit="handleCheckoutFormSubmit(event)" novalidate> <!-- Added onsubmit handler & novalidate -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="name" class="block text-gray-700 text-sm font-bold mb-1">Full Name</label>
@@ -773,23 +773,11 @@
                 </div>
             `;
             lucide.createIcons();
-
-            // The direct addEventListener was inside renderCheckoutForm
-            // It will be replaced by the new global function called by onsubmit
-            // const checkoutForm = document.getElementById('checkout-form');
-            // console.log("Checkout form element obtained:", checkoutForm); // Diagnostic Log 3
-
-            // if (checkoutForm) { // Ensure form exists before adding listener
-            //     checkoutForm.addEventListener('submit', async function(e) {
-            //         // ... old submit handler logic ...
-            //     });
-            // } else {
-            //     console.error("Checkout form element was not found for event listener attachment."); // Diagnostic Log 7
-            // }
         }
 
         // New global function to handle form submission
         window.handleCheckoutFormSubmit = async function(e) {
+            console.log("handleCheckoutFormSubmit function entered."); // Diagnostic Log 8
             e.preventDefault();
             console.log("Form submit event triggered (via onsubmit)."); // Diagnostic Log 4
 
