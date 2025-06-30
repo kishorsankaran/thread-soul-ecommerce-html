@@ -260,7 +260,7 @@
         initializeFirebase(); // Call to initialize Firebase on page load
 
         // --- Utility Functions ---
-        function updateCartCount() {
+        window.updateCartCount = function() { // Made global
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
             document.getElementById('cart-item-count').textContent = totalItems;
             // Hide the cart count if 0 items, show otherwise
@@ -276,7 +276,7 @@
             localStorage.setItem('threadSoulCart', JSON.stringify(cart));
         }
 
-        function showMessageBox(message, type = 'info') {
+        window.showMessageBox = function(message, type = 'info') { // Made global
             const container = document.getElementById('message-box-container');
             const messageBox = document.createElement('div');
             messageBox.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg text-white z-[1001] animate-fade-in-up`;
@@ -306,7 +306,7 @@
         }
 
         // --- Cart Functions ---
-        function addToCart(product) {
+        window.addToCart = function(product) { // Made global
             const existingItemIndex = cart.findIndex(item => item.id === product.id);
             if (existingItemIndex > -1) {
                 cart[existingItemIndex].quantity += 1;
@@ -318,14 +318,14 @@
             showMessageBox(`${product.name} added to cart!`, 'success');
         }
 
-        function removeFromCart(productId) {
+        window.removeFromCart = function(productId) { // Made global
             cart = cart.filter(item => item.id !== productId);
             saveCartToLocalStorage();
             updateCartCount();
             renderCartModalContent(); // Re-render cart content
         }
 
-        function updateQuantity(productId, newQuantity) {
+        window.updateQuantity = function(productId, newQuantity) { // Made global
             const item = cart.find(item => item.id === productId);
             if (item) {
                 item.quantity = Math.max(1, parseInt(newQuantity));
@@ -335,7 +335,7 @@
             renderCartModalContent(); // Re-render cart content
         }
 
-        function clearCart() {
+        window.clearCart = function() { // Made global
             cart = [];
             saveCartToLocalStorage();
             updateCartCount();
@@ -384,7 +384,7 @@
         }
 
         // --- Page Rendering Functions ---
-        function renderHomePage() {
+        window.renderHomePage = function() { // Made global
             const appRoot = document.getElementById('app-root');
             appRoot.innerHTML = `
                 <div class="container mx-auto px-4 py-8">
@@ -431,7 +431,7 @@
             lucide.createIcons();
         }
 
-        function renderCollectionsPage() {
+        window.renderCollectionsPage = function() { // Made global
             const appRoot = document.getElementById('app-root');
             appRoot.innerHTML = `
                 <div class="container mx-auto px-4 py-8">
@@ -457,7 +457,7 @@
             lucide.createIcons();
         }
 
-        function renderProductsPage() {
+        window.renderProductsPage = function() { // Made global
             const appRoot = document.getElementById('app-root');
             if (!selectedCollection) {
                 appRoot.innerHTML = `
@@ -499,7 +499,7 @@
             lucide.createIcons();
         }
 
-        function renderAboutPage() {
+        window.renderAboutPage = function() { // Made global
             const appRoot = document.getElementById('app-root');
             appRoot.innerHTML = `
                 <div class="container mx-auto px-4 py-8">
@@ -523,7 +523,7 @@
             lucide.createIcons();
         }
 
-        function renderContactPage() {
+        window.renderContactPage = function() { // Made global
             const appRoot = document.getElementById('app-root');
             appRoot.innerHTML = `
                 <div class="container mx-auto px-4 py-8">
@@ -555,19 +555,19 @@
             lucide.createIcons();
         }
 
-        function navigateTo(page) {
+        window.navigateTo = function(page) { // Made global
             currentPage = page;
             selectedCollection = null; // Reset selected collection when changing main pages
             renderCurrentPage();
         }
 
-        function selectCollection(collectionId) {
+        window.selectCollection = function(collectionId) { // Made global
             selectedCollection = collectionsData.find(c => c.id === collectionId);
             currentPage = 'products';
             renderCurrentPage();
         }
 
-        function renderCurrentPage() {
+        function renderCurrentPage() { // This is called internally, no need for window.
             switch (currentPage) {
                 case 'home':
                     renderHomePage();
@@ -592,7 +592,7 @@
         // --- Cart Modal Functions ---
         let cartModalInstance = null;
 
-        function openCartModal() {
+        window.openCartModal = function() { // Made global
             if (cartModalInstance) {
                 closeCartModal(); // Ensure only one modal is open
             }
@@ -616,14 +616,14 @@
             renderCartModalContent(); // Initial render of cart content
         }
 
-        function closeCartModal() {
+        window.closeCartModal = function() { // Made global
             if (cartModalInstance) {
                 cartModalInstance.remove();
                 cartModalInstance = null;
             }
         }
 
-        function renderCartModalContent() {
+        function renderCartModalContent() { // This is called internally, no need for window.
             const cartContentDiv = document.getElementById('cart-content');
             const checkoutFormContainer = document.getElementById('checkout-form-container');
 
@@ -694,7 +694,7 @@
             }
         }
 
-        function renderCheckoutForm() {
+        window.renderCheckoutForm = function() { // Made global
             const cartContentDiv = document.getElementById('cart-content');
             const checkoutFormContainer = document.getElementById('checkout-form-container');
 
@@ -726,11 +726,12 @@
                             <label for="phone" class="block text-gray-700 text-sm font-bold mb-1">Phone Number</label>
                             <input type="tel" id="phone" name="phone" required
                                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500">
-                        </div>
-                        <div>
-                            <label for="address" class="block text-gray-700 text-sm font-bold mb-1">Delivery Address</label>
-                            <textarea id="address" name="address" rows="3" required
-                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"></textarea>
+                            </div>
+                            <div>
+                                <label for="address" class="block text-gray-700 text-sm font-bold mb-1">Delivery Address</label>
+                                <textarea id="address" name="address" rows="3" required
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"></textarea>
+                            </div>
                         </div>
 
                         <h4 class="text-xl font-bold text-gray-800 mt-6 mb-4">Payment Details (Simulated)</h4>
@@ -760,7 +761,7 @@
                             class="w-full py-3 bg-pink-600 text-white rounded-full hover:bg-pink-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-lg font-semibold flex items-center justify-center">
                             Pay <i data-lucide="indian-rupee" class="w-5 h-5 ml-2 mr-1"></i>${total.toLocaleString('en-IN')}
                         </button>
-                        <p class="text-sm text-gray-500 text-center mt-2">
+                        <p class="text-sm text-center text-gray-500 mt-2">
                             This payment is simulated for demonstration purposes.
                         </p>
                     </form>
