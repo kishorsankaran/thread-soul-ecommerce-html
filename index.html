@@ -219,7 +219,7 @@
 
         // --- Configuration for WhatsApp ---
         // REPLACE THIS WITH THE ACTUAL PHONE NUMBER FOR YOUR BUSINESS (including country code, without + or leading zeros)
-        const WHATSAPP_BUSINESS_NUMBER = "919846777855"; // Example: for India +91, use 919876543210
+        const WHATSAPP_BUSINESS_NUMBER = "919876543210"; // Example: for India +91, use 919876543210
 
 
         // --- Utility Functions ---
@@ -458,7 +458,7 @@
                         <div class="space-y-4">
                             <div class="flex items-center space-x-3">
                                 <i data-lucide="phone" class="w-6 h-6 text-purple-600"></i>
-                                <span>Phone: +91 98467 77855</span>
+                                <span>Phone: +91 98765 43210</span>
                             </div>
                             <div class="flex items-center space-x-3">
                                 <i data-lucide="mail" class="w-6 h-6 text-purple-600"></i>
@@ -734,12 +734,13 @@
             console.log("Constructed WhatsApp Message (Raw):", message);
             const encodedMessage = encodeURIComponent(message);
             console.log("Constructed WhatsApp Message (Encoded):", encodedMessage);
-            // Changed from wa.me to api.whatsapp.com for potentially better web client handling
             const whatsappUrl = `https://api.whatsapp.com/send?phone=${WHATSAPP_BUSINESS_NUMBER}&text=${encodedMessage}`;
             console.log("Generated WhatsApp URL:", whatsappUrl);
             // --- END DIAGNOSTIC LOGS ---
 
-            // Open WhatsApp
+            // Open WhatsApp in a new blank tab
+            // This URL (api.whatsapp.com) is generally more consistent in getting message text across
+            // and might favor the web client if the desktop app handler is problematic.
             window.open(whatsappUrl, '_blank');
 
             orderStatusElement.textContent = 'WhatsApp opened with your order details. Please send the message.';
