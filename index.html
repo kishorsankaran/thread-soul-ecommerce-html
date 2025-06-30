@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thread & Soul - Your Dress Business</title>
-    <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter font for better typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <!-- Lucide Icons for vector icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         /* Custom CSS for finer control and animations */
@@ -104,7 +101,6 @@
 </head>
 <body class="bg-gray-100 font-sans flex flex-col">
 
-    <!-- Header -->
     <header class="bg-gradient-to-r from-pink-500 to-purple-600 text-white p-4 shadow-md rounded-b-xl">
         <div class="container mx-auto flex justify-between items-center flex-wrap">
             <h1 class="text-3xl font-extrabold font-serif tracking-wide">Thread & Soul</h1>
@@ -133,12 +129,9 @@
         </div>
     </header>
 
-    <!-- Main Content Area -->
     <main id="app-root" class="flex-grow">
-        <!-- Content will be injected here by JavaScript -->
-    </main>
+        </main>
 
-    <!-- Footer -->
     <footer class="bg-gray-800 text-white py-6 mt-10 rounded-t-xl shadow-inner">
         <div class="container mx-auto text-center">
             <p class="text-lg font-semibold">&copy; 2025 Thread & Soul. All rights reserved.</p>
@@ -150,9 +143,7 @@
         </div>
     </footer>
 
-    <!-- Cart Modal Container -->
     <div id="cart-modal-container"></div>
-    <!-- Message Box Container -->
     <div id="message-box-container"></div>
 
 
@@ -731,15 +722,13 @@
             cartContentDiv.innerHTML = ''; // Clear cart view
             const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-            // Diagnostic Log: Log the HTML string that will be injected
             const checkoutFormHtml = `
                 <div class="p-4">
                     <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Checkout</h3>
                     <p class="text-sm text-gray-500 mb-4 text-center">
                         Your User ID for this session: <span class="font-mono bg-gray-100 p-1 rounded text-xs">${userId}</span>
                     </p>
-                    <form id="checkout-form" class="space-y-4" onsubmit="handleCheckoutFormSubmit(event)" novalidate> <!-- Added onsubmit handler & novalidate -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <form id="checkout-form" class="space-y-4" novalidate> <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="name" class="block text-gray-700 text-sm font-bold mb-1">Full Name</label>
                                 <input type="text" id="name" name="name" required
@@ -786,7 +775,7 @@
 
                         <p id="order-status" class="text-center font-semibold mt-4"></p>
 
-                        <button type="submit" id="pay-button" onclick="console.log('Pay button clicked via onclick!'); return true;"
+                        <button type="submit" id="pay-button"
                             class="w-full py-3 bg-pink-600 text-white rounded-full hover:bg-pink-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-lg font-semibold flex items-center justify-center">
                             Pay <i data-lucide="indian-rupee" class="w-5 h-5 ml-2 mr-1"></i>${total.toLocaleString('en-IN')}
                         </button>
@@ -796,17 +785,26 @@
                     </form>
                 </div>
             `;
-            console.log("Checkout form HTML being injected:", checkoutFormHtml); // Diagnostic Log 9
+            console.log("Checkout form HTML being injected."); // Diagnostic Log 9 (simplified)
 
             checkoutFormContainer.innerHTML = checkoutFormHtml;
             lucide.createIcons();
+
+            // *** IMPORTANT: Explicitly attach event listener after HTML is in DOM ***
+            const checkoutForm = document.getElementById('checkout-form');
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', window.handleCheckoutFormSubmit);
+                console.log("Submit event listener attached to checkout form."); // New diagnostic log
+            } else {
+                console.error("Error: Could not find checkout form after injection to attach listener.");
+            }
         }
 
         // New global function to handle form submission
         window.handleCheckoutFormSubmit = async function(e) {
             console.log("handleCheckoutFormSubmit function entered."); // Diagnostic Log 8
-            e.preventDefault();
-            console.log("Form submit event triggered (via onsubmit)."); // Diagnostic Log 4
+            e.preventDefault(); // Prevent default form submission (page reload)
+            console.log("Form submit event triggered (via addEventListener)."); // Diagnostic Log 4 (updated)
 
             const payButton = document.getElementById('pay-button');
             const orderStatusElement = document.getElementById('order-status');
